@@ -5,275 +5,147 @@ import coloredlogs
 import json
 import hashlib
 import logging as log
+from lxml import etree
+import lxml
 import os
 import os.path
 import pprint
-from shutil import copyfile
-import subprocess
 import sys
-import xlrd
+
 coloredlogs.install()
-pp = pprint.PrettyPrinter(compact=True)
+pp = pprint.PrettyPrinter(indent=2, width=300)
 
 log.basicConfig(level=log.INFO)
 
-class SheetVerifier:
-    def __init__(self, sheet):
-        self.sheet = sheet
-        self.ok = True
-    
-    def verify(self):
-        self.check(0, 0, "Language name")
-        self.check(0, 1)
-        self.check(0, 2)
-        self.check(1, 0, "AIATSIS code")
-        self.check(1, 1)
-        self.check(2, 0, "Speaker's name")
-        self.check(2, 1)
-        self.check(2, 2)
-        self.check(3, 0, "Other people who helped to get the list produced")
-        self.check(3, 1)
-        self.check(4, 0, "Permission form received (Y/N)?")
-        self.check(4, 1)
-        self.check(5, 0, "Source")
-        self.check(5, 1)
-        self.check(6, 0, "Date received")
-        self.check(6, 1)
-        self.check(7, 1, 'Word')
-        self.check(7, 2, 'Audio filename')
-        for i in range(8, 65):
-            self.check(i, 0)
-            self.check(i, 1)
-            self.check(i, 2)
-
-    def check(self, row, column, value=None):
-        if value and self.sheet.row_values(row)[column] != value:
-            self.ok = False
-            log.error(f"""Unexpected value in row: {row}, column: {column}."""
-            f"""Expected: {value}, Got: {self.sheet.row_values(row)[column]}""")
-        elif not self.sheet.row_values(row)[column]:
-            log.warning(f"Empty cell found at row: {row+1}, column: {column+1}. Value expected.")
 
 class DataExtractor:
     def __init__(self):
         self.data = {}
         self.words = {}
         self.languages = {}
-        self.data_path = '/srv/data'
-        self.repository = '/srv/dist/repository'
-    
+        self.data_path = "/srv/data"
+        self.repository = "/srv/dist/repository"
+
     def extract(self):
-        self.extract_aiatsis_geographies()
-        self.extract_language_data()
-        self.build_repository()
-        self.write_master_indices()
+        self.process_datafiles()
 
-    def extract_aiatsis_geographies(self):
-        def parse_row(row):
-            return {
-                'code': row[0],
-                'name': row[1],
-                'lat': row[3],
-                'lng': row[4],
-                'glotto_id': row[6]
-            }
-
-
-        print("Extracting geography data")
-        with xlrd.open_workbook(f"{self.data_path}/AIATSIS-geography.xlsx") as wb:
-            sh = wb.sheet_by_index(0)
-            for r in range(1, sh.nrows):
-                row = parse_row(sh.row_values(r))
-                self.data[row['code']] = row
-    
-    def extract_language_data(self):
-        def parse_row(row):
-            data = {
-                'english': row[0],
-                'indigenous': row[1].lower(),
-                'audio_file': row[2],
-            }
-            if len(row) == 4 and row[3]:
-                data['english_alternate'] = row[3]
-            return data
-
+    def process_datafiles(self):
         for root, dirs, files in os.walk(self.data_path):
             sheet = []
             for file in files:
-                if 'xlsx' in file and not '~$' in file:
-                    sheet.append(file)
-            if root == '/srv/data':
-                continue
-            print("")
-            log.info(f"Processing: {root}")
-            if len(sheet) > 1:
-                log.error('Found more than one data spreadsheet. Skipping this folder.')
-                continue
-            sheet = sheet[0]
-            sheet = os.path.join(root, sheet)
-            with xlrd.open_workbook(sheet) as wb:
-                sh = wb.sheet_by_index(0) 
-                if (sh.nrows != 65):
-                    log.error(f"{sheet} isn't exactly 65 rows - is it correct?")
-                    continue
+                if "eaf" in file:
+                    fpath = f"{root}/{file}"
+                    try:
+                        tree = etree.parse(fpath)
+                        self.process_elan_file(fpath, tree)
+                        break
+                    except lxml.etree.XMLSyntaxError:
+                        log.error(f"Invalid file: {fpath}")
 
-                log.info(f"Verifying {sheet}")
-                v = SheetVerifier(sh)
-                v.verify()
-                if not v.ok:
-                    log.error('Errors found in sheet - skipping this folder.')
-                    continue
+    def process_elan_file(self, fpath, tree):
+        log.info(f"Processing: {fpath}")
+        issues = []
+        statistics = {"file": fpath}
+        annotations = {}
+        timeslots, statistics = self.extract_timeslots(tree, statistics)
+        timeslots, annotations, issues = self.extract_alignable_annotations(
+            tree, issues, timeslots
+        )
+        annotations, issues, statistics = self.extract_reference_annotations(
+            tree, issues, statistics, annotations
+        )
+        timeslots, statistics = self.map_annotations_to_timeslots(
+            timeslots, statistics, annotations
+        )
 
-                log.info(f"Extracting language data from {sheet}")
-                sheet = {
-                    'language': {
-                        'name': sh.row_values(0)[1],
-                        'audio_file':  os.path.join(root, sh.row_values(0)[2]) if sh.row_values(0)[2] else ''
-                    },
-                    'date_received': sh.row_values(6)[1],
-                    'code': sh.row_values(1)[1],
-                    'words': [],
-                    'speaker': {
-                        'name': sh.row_values(2)[1],
-                        'audio_file':  os.path.join(root, sh.row_values(2)[2]) if sh.row_values(2)[2] else ''
-                    }, 
-                    'thankyou': sh.row_values(3)[1]
-                }
-                # pp.pprint(sheet)
-                if sheet['code'] not in self.data.keys():
-                    log.error(f"{sheet['code']} not in AIATSIS-geography.xlsx")
-                    continue
+        statistics["totalIssues"] = len(issues)
+        # pp.pprint(timeslots)
+        pp.pprint(issues)
+        pp.pprint(statistics)
 
-                log.info(f"Creating repository for {sh.row_values(1)[1]}")
-                for r in range(8, sh.nrows):
-                    data = parse_row(sh.row_values(r))
-                    if data['audio_file']:
-                        data['audio_file'] = os.path.join(root, data['audio_file'])
-                    else:
-                        data['audio_file'] = data['audio_file']
-
-                    sheet['words'].append(data) 
-            
-            self.data[sheet['code']] = {
-                **self.data[sheet['code']],
-                **sheet,
-                }
-        
-    def build_repository(self):
-        def get_target_name(path, file, ext):
-            return os.path.join(path, os.path.splitext(os.path.basename(file))[0]) + ext
-
-        def transcode(item, target):
-            if not os.path.exists(target):
-                log.info(f"Transcoding {item} to webm and mp3")
-                subprocess.run(['ffmpeg', '-hide_banner', '-loglevel',  'panic', '-i', item, target])
-            
-        self.makepath(self.repository)
-        for key, item in self.data.items():
-            log.info(f"Building repository for {item['code']}")
-            item_path = os.path.join(self.repository, item['code'])
-            self.languages[item['code']] = { 
-                'name': item['name'], 
-                'code': item['code'] , 
-                'lat': item['lat'], 
-                'lng': item['lng'],
+    def extract_timeslots(self, tree, statistics):
+        timeslots = {}
+        ts_elements = tree.findall("//TIME_SLOT")
+        for ts in ts_elements:
+            timeslots[ts.attrib["TIME_SLOT_ID"]] = {
+                "time": ts.attrib["TIME_VALUE"],
+                "children": [],
             }
-            if 'speaker' in item:
-                self.languages[item['code']]['speaker'] = item['speaker']
-            self.makepath(item_path)
+        statistics["start"] = int(ts_elements[0].attrib["TIME_VALUE"])
+        statistics["end"] = int(ts_elements[-1:][0].attrib["TIME_VALUE"])
+        statistics["duration"] = statistics["end"] - statistics["start"]
+        statistics["timeslots"] = len(ts_elements)
+        return timeslots, statistics
 
-            self.languages[item['code']]['words'] = False
+    def extract_alignable_annotations(self, tree, issues, timeslots):
+        annotations = {}
 
-            if 'language' in item and item['language']['audio_file']:
-                try:
-                    transcode(item['language']['audio_file'], get_target_name(item_path, item['language']['audio_file'], '.webm'))
-                    transcode(item['language']['audio_file'], get_target_name(item_path, item['language']['audio_file'], '.mp3'))
-                    copyfile(item['language']['audio_file'], os.path.join(item_path, os.path.basename(item['language']['audio_file'])))
-                    audio_files = [
-                        get_target_name(item_path, item['language']['audio_file'], '.webm').replace('/srv/dist', ''),
-                        get_target_name(item_path, item['language']['audio_file'], '.mp3').replace('/srv/dist', '')
-                    ]
-                    if 'wav' in item['language']['audio_file']:
-                        audio_files.append(os.path.join(item_path, os.path.basename(item['language']['audio_file'])).replace('/srv/dist', ''))
-                    item['language']['audio_file'] = audio_files
-                        
-                except FileNotFoundError: 
-                    log.error(f"missing file {item['language']['audio_file']}")
+        print(
+            f"Total number of alignable annotations: {len(tree.findall('//ALIGNABLE_ANNOTATION'))}"
+        )
+        for aa in tree.findall("//ALIGNABLE_ANNOTATION"):
+            if "TIME_SLOT_REF1" not in aa.attrib:
+                issues.append(
+                    f"TIME_SLOT_REF1 missing from ALIGNABLE_ANNOTATION {aa.attrib['ANNOTATION_ID']}"
+                )
+            if "TIME_SLOT_REF2" not in aa.attrib:
+                issues.append(
+                    f"TIME_SLOT_REF2 missing from ALIGNABLE_ANNOTATION {aa.attrib['ANNOTATION_ID']}"
+                )
+            tsref = aa.attrib["TIME_SLOT_REF1"]
+            timeslots[tsref]["name"] = aa.attrib["ANNOTATION_ID"]
 
-            if 'speaker' in item and item['speaker']['audio_file']:
-                try:
-                    transcode(item['speaker']['audio_file'], get_target_name(item_path, item['speaker']['audio_file'], '.webm'))
-                    transcode(item['speaker']['audio_file'], get_target_name(item_path, item['speaker']['audio_file'], '.mp3'))
-                    copyfile(item['speaker']['audio_file'], os.path.join(item_path, os.path.basename(item['speaker']['audio_file'])))
-                    audio_files = [
-                        get_target_name(item_path, item['speaker']['audio_file'], '.webm').replace('/srv/dist', ''),
-                        get_target_name(item_path, item['speaker']['audio_file'], '.mp3').replace('/srv/dist', '')
-                    ]
-                    if 'wav' in item['speaker']['audio_file']:
-                        audio_files.append(os.path.join(item_path, os.path.basename(item['speaker']['audio_file'])).replace('/srv/dist', ''))
-                    item['speaker']['audio_file'] = audio_files
-                except FileNotFoundError: 
-                    log.error(f"missing file {item['speaker']['audio_file']}")
+        for (key, ts) in timeslots.items():
+            if "name" not in ts:
+                issues.append(
+                    f"TIMESLOT {key} has no alignable annotation mapped to it"
+                )
+        return timeslots, annotations, issues
 
-            if 'words' in item.keys():
-                words = []
-                for word in item['words']:
-                    if word['english'] not in self.words.keys():
-                        self.words[word['english']] = []
+    def extract_reference_annotations(self, tree, issues, statistics, annotations):
+        annotatddions = {}
+        ref_annotations = tree.findall("//REF_ANNOTATION")
+        print(f"Total number of ref annotations: {len(ref_annotations)}")
+        statistics["totalRefAnnotations"] = len(ref_annotations)
+        for ra in ref_annotations:
+            annotations[ra.attrib["ANNOTATION_ID"]] = {
+                "value": ra.find("ANNOTATION_VALUE").text,
+                "ref": ra.attrib["ANNOTATION_REF"],
+                "name": ra.attrib["ANNOTATION_ID"],
+                "type": "ref annotation",
+                "children": [],
+            }
+            # print(ra.find("ANNOTATION_VALUE").text)
+            if not ra.find("ANNOTATION_VALUE").text:
+                issues.append(
+                    f"REF_ANNOTATION {ra.attrib['ANNOTATION_ID']} has no data"
+                )
+        return annotations, issues, statistics
 
-                    if word['audio_file']:
-                        try:
-                            transcode(word['audio_file'], get_target_name(item_path, word['audio_file'], '.webm'))
-                            transcode(word['audio_file'], get_target_name(item_path, word['audio_file'], '.mp3'))
-                            copyfile(word['audio_file'], os.path.join(item_path, os.path.basename(word['audio_file'])))
-                            audio_files = [
-                                get_target_name(item_path, word['audio_file'], '.webm').replace('/srv/dist', ''),
-                                get_target_name(item_path, word['audio_file'], '.mp3').replace('/srv/dist', '')
-                            ]
-                            if 'wav' in word['audio_file']:
-                                audio_files.append(os.path.join(item_path, os.path.basename(word['audio_file'])).replace('/srv/dist', ''))
-                            word['audio_file'] = audio_files
-                        except FileNotFoundError: 
-                            log.error(f"missing file {word['audio_file']}")
+    def map_annotations_to_timeslots(self, timeslots, statistics, annotations):
+        def map_annotation(i, ann, children):
+            for child in children:
+                if ann["ref"] == child["name"]:
+                    i += 1
+                    child["children"].append(ann)
+                else:
+                    i = map_annotation(i, ann, child["children"])
+            return i
 
-                    words.append(word)
-                    word['language'] = item['name']
-                    word['code'] = item['code']
-                    self.words[word['english']].append(word)
-                self.languages[item['code']]['words'] = True
-                item['words'] = words
+        i = 0
+        for (annkey, annvalue) in annotations.items():
+            for (tskey, tsvalue) in timeslots.items():
+                if "name" in tsvalue and annvalue["ref"] == tsvalue["name"]:
+                    i += 1
+                    tsvalue["children"].append(annvalue)
+                else:
+                    i = map_annotation(i, annvalue, tsvalue["children"])
+        statistics["totalMappedAnnotations"] = i
+        print(f"Total number of annotations mapped: {i}")
+        return timeslots, statistics
 
-            with open(os.path.join(item_path, 'index.json'), 'w') as f:
-                f.write(json.dumps(item))
-
-    def makepath(self, path):
-        try:
-            os.makedirs(path)
-        except:
-            pass
-
-    def write_master_indices(self):
-        with open(f"{self.repository}/index.json", 'w') as f:
-            f.write(json.dumps(self.data))
-
-        with open(f"{self.repository}/languages.json", 'w') as f:
-            f.write(json.dumps({ 'languages': [ item for (key, item) in self.languages.items() ] }))
-        
-
-        words = []
-        for (key, item) in self.words.items():
-            m = hashlib.sha256()
-            m.update(key.encode())
-            word = m.hexdigest()
-            words.append({ 'name': item[0]['english'], 'index': f"{word}.json" })
-            with open(f"{self.repository}/{word}.json", 'w') as f:
-                f.write(json.dumps(item))
-
-        with open(f"{self.repository}/words.json", 'w') as f:
-            f.write(json.dumps({ 'words': words }))
 
 if __name__ == "__main__":
     d = DataExtractor()
     d.extract()
 
-            
