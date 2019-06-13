@@ -25,22 +25,28 @@ class DataExtractor:
         self.languages = {}
         self.data_path = "/srv/data"
         self.repository = "/srv/dist/repository"
+        try:
+            os.makedirs(self.repository)
+        except FileExistsError:
+            pass
 
     def extract(self):
         self.process_datafiles()
 
     def process_datafiles(self):
+        stats = []
         for root, dirs, files in os.walk(self.data_path):
-            sheet = []
             for file in files:
                 if "eaf" in file:
                     fpath = f"{root}/{file}"
                     try:
                         tree = etree.parse(fpath)
-                        self.process_elan_file(fpath, tree)
-                        break
+                        stats.append(self.process_elan_file(fpath, tree))
                     except lxml.etree.XMLSyntaxError:
                         log.error(f"Invalid file: {fpath}")
+        pp.pprint(stats)
+        with open(f"{self.repository}/index.json", "w") as f:
+            f.write(json.dumps({"statistics": stats}))
 
     def process_elan_file(self, fpath, tree):
         log.info(f"Processing: {fpath}")
@@ -59,9 +65,17 @@ class DataExtractor:
         )
 
         statistics["totalIssues"] = len(issues)
+
+        m = hashlib.sha256()
+        m.update(statistics["file"].encode())
+        digest = m.hexdigest()
+        statistics["dataFile"] = f"/repository/{digest}.json"
+        with open(f"{self.repository}/{digest}.json", "w") as f:
+            f.write(json.dumps({"data": timeslots, "issues": issues}))
         # pp.pprint(timeslots)
-        pp.pprint(issues)
-        pp.pprint(statistics)
+        # pp.pprint(issues)
+        # log.debug(statistics)
+        return statistics
 
     def extract_timeslots(self, tree, statistics):
         timeslots = {}
@@ -80,7 +94,7 @@ class DataExtractor:
     def extract_alignable_annotations(self, tree, issues, timeslots):
         annotations = {}
 
-        print(
+        log.debug(
             f"Total number of alignable annotations: {len(tree.findall('//ALIGNABLE_ANNOTATION'))}"
         )
         for aa in tree.findall("//ALIGNABLE_ANNOTATION"):
@@ -105,7 +119,7 @@ class DataExtractor:
     def extract_reference_annotations(self, tree, issues, statistics, annotations):
         annotatddions = {}
         ref_annotations = tree.findall("//REF_ANNOTATION")
-        print(f"Total number of ref annotations: {len(ref_annotations)}")
+        log.debug(f"Total number of ref annotations: {len(ref_annotations)}")
         statistics["totalRefAnnotations"] = len(ref_annotations)
         for ra in ref_annotations:
             annotations[ra.attrib["ANNOTATION_ID"]] = {
@@ -141,7 +155,7 @@ class DataExtractor:
                 else:
                     i = map_annotation(i, annvalue, tsvalue["children"])
         statistics["totalMappedAnnotations"] = i
-        print(f"Total number of annotations mapped: {i}")
+        log.debug(f"Total number of annotations mapped: {i}")
         return timeslots, statistics
 
 
