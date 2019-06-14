@@ -44,14 +44,13 @@ class DataExtractor:
                         stats.append(self.process_elan_file(fpath, tree))
                     except lxml.etree.XMLSyntaxError:
                         log.error(f"Invalid file: {fpath}")
-        pp.pprint(stats)
         with open(f"{self.repository}/index.json", "w") as f:
             f.write(json.dumps({"statistics": stats}))
 
     def process_elan_file(self, fpath, tree):
         log.info(f"Processing: {fpath}")
         issues = []
-        statistics = {"file": fpath}
+        statistics = {"file": fpath.replace(f"{self.data_path}/", "")}
         annotations = {}
         timeslots, statistics = self.extract_timeslots(tree, statistics)
         timeslots, annotations, issues = self.extract_alignable_annotations(
