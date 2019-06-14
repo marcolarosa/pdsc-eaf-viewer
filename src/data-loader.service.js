@@ -1,8 +1,6 @@
 "use strict";
 
-import { compact, orderBy } from "lodash";
-
-export async function loadData({ store }) {
+export async function loadIndex({ store }) {
     const index = (await get(mapRepositoryRoot("/repository/index.json")))
         .statistics;
     store.commit(`saveIndex`, { index });
@@ -21,39 +19,13 @@ export async function loadData({ store }) {
     }
 }
 
-export async function loadLanguageData({ code }) {
-    let response = await fetch(
-        mapRepositoryRoot(`/repository/${code}/index.json`)
-    );
+export async function loadFileData({ dataFile }) {
+    let response = await fetch(mapRepositoryRoot(dataFile));
     if (response.status !== 200) {
         throw new Error(response);
     }
     let data = await response.json();
-    data.words = data.words.map(w => {
-        return {
-            ...w,
-            audio_file: mapRepositoryRoot(w.audio_file)
-        };
-    });
     return data;
-}
-
-export async function loadWordData({ word, words }) {
-    let index = words.filter(w => {
-        return w.name === word;
-    })[0].index;
-    let response = await fetch(mapRepositoryRoot(`/repository/${index}`));
-    if (response.status !== 200) {
-        throw new Error(response);
-    }
-    word = orderBy(await response.json(), "language");
-    word = word.map(w => {
-        return {
-            ...w,
-            audio_file: mapRepositoryRoot(w.audio_file)
-        };
-    });
-    return word;
 }
 
 export function mapRepositoryRoot(path) {
