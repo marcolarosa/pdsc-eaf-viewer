@@ -11,6 +11,7 @@
             width="800"
             :default-sort="{prop: 'file', order: 'ascending'}"
             stripe
+            @row-click="triggerRowSelection"
             class="text-lg"
         >
             <el-table-column prop="file" label="File" width="500" fixed sortable></el-table-column>
@@ -49,6 +50,11 @@ export default {
             return this.$store.state.index.filter(f =>
                 f.file.match(this.fileFilter)
             );
+        }
+    },
+    methods: {
+        triggerRowSelection(row) {
+            this.$emit("row-selected", row);
         }
     }
 };
