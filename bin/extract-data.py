@@ -99,11 +99,15 @@ class DataExtractor:
         for aa in tree.findall("//ALIGNABLE_ANNOTATION"):
             if "TIME_SLOT_REF1" not in aa.attrib:
                 issues.append(
-                    f"TIME_SLOT_REF1 missing from ALIGNABLE_ANNOTATION {aa.attrib['ANNOTATION_ID']}"
+                    {
+                        "msg": f"TIME_SLOT_REF1 missing from ALIGNABLE_ANNOTATION {aa.attrib['ANNOTATION_ID']}"
+                    }
                 )
             if "TIME_SLOT_REF2" not in aa.attrib:
                 issues.append(
-                    f"TIME_SLOT_REF2 missing from ALIGNABLE_ANNOTATION {aa.attrib['ANNOTATION_ID']}"
+                    {
+                        "msg": f"TIME_SLOT_REF2 missing from ALIGNABLE_ANNOTATION {aa.attrib['ANNOTATION_ID']}"
+                    }
                 )
             tsref = aa.attrib["TIME_SLOT_REF1"]
             timeslots[tsref]["name"] = aa.attrib["ANNOTATION_ID"]
@@ -111,7 +115,7 @@ class DataExtractor:
         for (key, ts) in timeslots.items():
             if "name" not in ts:
                 issues.append(
-                    f"TIMESLOT {key} has no alignable annotation mapped to it"
+                    {"msg": f"TIMESLOT {key} has no alignable annotation mapped to it"}
                 )
         return timeslots, annotations, issues
 
@@ -131,7 +135,7 @@ class DataExtractor:
             # print(ra.find("ANNOTATION_VALUE").text)
             if not ra.find("ANNOTATION_VALUE").text:
                 issues.append(
-                    f"REF_ANNOTATION {ra.attrib['ANNOTATION_ID']} has no data"
+                    {"msg": f"REF_ANNOTATION {ra.attrib['ANNOTATION_ID']} has no data"}
                 )
         return annotations, issues, statistics
 
