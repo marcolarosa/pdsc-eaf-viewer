@@ -1,9 +1,21 @@
 <template>
     <div class="container mx-auto font-mono p-4">
-        <render-data-table-component v-on:row-selected="loadFileData"/>
+        <el-card>
+            <div slot="header">
+                File Statistics
+                <p class="text-gray-600">
+                    Click on a row to see the list of issues discovered in that file and view a visualisation
+                    of the structure.
+                </p>
+            </div>
+            <render-data-table-component v-on:row-selected="loadFileData"/>
+        </el-card>
         <div class="flex">
             <div class="w-1/2">
-                <render-issues-component :issues="dataFile.issues" v-if="dataFile"/>
+                <el-card class="mt-4">
+                    <div slot="header">Selected File Issues</div>
+                    <render-issues-component :issues="dataFile.issues" v-if="dataFile"/>
+                </el-card>
             </div>
         </div>
     </div>
