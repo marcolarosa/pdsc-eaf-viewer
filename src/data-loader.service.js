@@ -29,10 +29,9 @@ export async function loadFileData({ dataFile }) {
 }
 
 export function mapRepositoryRoot(path) {
-    return path;
     const root =
         process.env.NODE_ENV === "development"
             ? "/repository"
-            : "/50words/repository";
+            : "/elan-lint/repository";
     return path.replace("/repository", root);
 }

@@ -16,7 +16,8 @@ module.exports = {
     entry: ["./src/vendor.js", "./src/index.js"],
     output: {
         path: path.resolve(__dirname, "dist"),
-        filename: "[name].[hash].bundle.js"
+        filename: "[name].[hash].bundle.js",
+        publicPath: "/elan-lint"
     },
     optimization: {
         splitChunks: {
