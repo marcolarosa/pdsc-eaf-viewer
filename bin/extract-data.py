@@ -93,6 +93,7 @@ class DataExtractor:
         ts_elements = tree.findall("//TIME_SLOT")
         for ts in ts_elements:
             timeslots[ts.attrib["TIME_SLOT_ID"]] = {
+                "ts": ts.attrib["TIME_SLOT_ID"],
                 "time": ts.attrib["TIME_VALUE"],
                 "children": [],
             }
@@ -124,7 +125,6 @@ class DataExtractor:
             tsref = aa.attrib["TIME_SLOT_REF1"]
             timeslots[tsref]["name"] = aa.attrib["ANNOTATION_ID"]
             timeslots[tsref]["value"] = aa.find("ANNOTATION_VALUE").text
-            timeslots[tsref]["ts"] = tsref
 
         for (key, ts) in timeslots.items():
             if "name" not in ts:
