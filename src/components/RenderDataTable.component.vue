@@ -16,21 +16,21 @@
             class="text-md"
         >
             <el-table-column prop="file" label="File" width="300" fixed sortable></el-table-column>
-            <el-table-column prop="duration" label="Duration" :width="dataColumnWidth" sortable></el-table-column>
-            <el-table-column prop="timeslots" label="# Timeslots" :width="dataColumnWidth" sortable></el-table-column>
-            <el-table-column prop="totalIssues" label="Issues" :width="dataColumnWidth" sortable></el-table-column>
-            <el-table-column prop="start" label="Start Time" :width="dataColumnWidth"></el-table-column>
-            <el-table-column prop="end" label="End Time" :width="dataColumnWidth"></el-table-column>
+            <el-table-column prop="duration" label="Duration" width="120" sortable></el-table-column>
+            <el-table-column prop="timeslots" label="# Timeslots" width="150" sortable></el-table-column>
+            <el-table-column prop="totalIssues" label="Issues" width="120" sortable></el-table-column>
+            <el-table-column prop="start" label="Start Time" width="120"></el-table-column>
+            <el-table-column prop="end" label="End Time" width="120"></el-table-column>
             <el-table-column
                 prop="totalRefAnnotations"
-                label="# Ref Annotations"
-                :width="dataColumnWidth"
+                label="Ref Annotations"
+                width="180"
                 sortable
             ></el-table-column>
             <el-table-column
                 prop="totalMappedAnnotations"
-                label="# Mapped Annotations"
-                :width="dataColumnWidth"
+                label="Mapped Annotations"
+                width="200"
                 sortable
             ></el-table-column>
         </el-table>
@@ -42,7 +42,6 @@ export default {
     data() {
         return {
             height: 300,
-            dataColumnWidth: 200,
             fileFilter: undefined
         };
     },
