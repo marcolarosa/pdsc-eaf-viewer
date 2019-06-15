@@ -9,17 +9,18 @@
             :data="index"
             :height="height"
             width="800"
-            :default-sort="{prop: 'file', order: 'ascending'}"
+            :default-sort="{prop: 'duration', order: 'ascending'}"
             :highlight-current-row="true"
             stripe
             @row-click="triggerRowSelection"
-            class="text-lg"
+            class="text-md"
         >
-            <el-table-column prop="file" label="File" width="500" fixed sortable></el-table-column>
-            <el-table-column prop="start" label="Start Time" :width="dataColumnWidth"></el-table-column>
-            <el-table-column prop="end" label="End Time" :width="dataColumnWidth"></el-table-column>
+            <el-table-column prop="file" label="File" width="300" fixed sortable></el-table-column>
             <el-table-column prop="duration" label="Duration" :width="dataColumnWidth" sortable></el-table-column>
             <el-table-column prop="timeslots" label="# Timeslots" :width="dataColumnWidth" sortable></el-table-column>
+            <el-table-column prop="totalIssues" label="Issues" :width="dataColumnWidth" sortable></el-table-column>
+            <el-table-column prop="start" label="Start Time" :width="dataColumnWidth"></el-table-column>
+            <el-table-column prop="end" label="End Time" :width="dataColumnWidth"></el-table-column>
             <el-table-column
                 prop="totalRefAnnotations"
                 label="# Ref Annotations"
@@ -32,7 +33,6 @@
                 :width="dataColumnWidth"
                 sortable
             ></el-table-column>
-            <el-table-column prop="totalIssues" label="Issues" :width="dataColumnWidth" sortable></el-table-column>
         </el-table>
     </div>
 </template>
@@ -42,7 +42,7 @@ export default {
     data() {
         return {
             height: 300,
-            dataColumnWidth: 280,
+            dataColumnWidth: 200,
             fileFilter: undefined
         };
     },
