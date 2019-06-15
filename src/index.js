@@ -4,10 +4,6 @@
 import "core-js/stable";
 import "regenerator-runtime/runtime";
 
-import "tailwindcss/base.css";
-import "tailwindcss/components.css";
-import "tailwindcss/utilities.css";
-
 import Vue from "vue";
 import ElementUI from "element-ui";
 import locale from "element-ui/lib/locale/lang/en";

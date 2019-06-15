@@ -64,11 +64,19 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                use: [MiniCssExtractPlugin.loader, "css-loader"]
+                use: [
+                    "vue-style-loader",
+                    { loader: "css-loader", options: { importLoaders: 1 } },
+                    "postcss-loader"
+                ]
             },
             {
                 test: /\.scss$/,
-                use: ["vue-style-loader", "css-loader", "sass-loader"]
+                use: [
+                    "vue-style-loader",
+                    { loader: "css-loader", options: { importLoaders: 1 } },
+                    "postcss-loader"
+                ]
             },
             {
                 test: /\.(woff|woff2|ttf|eot|svg|png|jp(e*)g|gif)?$/,

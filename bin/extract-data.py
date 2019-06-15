@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env pythn
 
 import base64
 import coloredlogs
@@ -69,8 +69,20 @@ class DataExtractor:
         m.update(statistics["file"].encode())
         digest = m.hexdigest()
         statistics["dataFile"] = f"/repository/{digest}.json"
+        ts = []
+        for (key, value) in timeslots.items():
+            # value["name"] = key
+            ts.append(value)
+
         with open(f"{self.repository}/{digest}.json", "w") as f:
-            f.write(json.dumps({"data": timeslots, "issues": issues}))
+            f.write(
+                json.dumps(
+                    {
+                        "data": {"name": statistics["file"], "children": ts},
+                        "issues": issues,
+                    }
+                )
+            )
         # pp.pprint(timeslots)
         # pp.pprint(issues)
         # log.debug(statistics)
@@ -111,6 +123,8 @@ class DataExtractor:
                 )
             tsref = aa.attrib["TIME_SLOT_REF1"]
             timeslots[tsref]["name"] = aa.attrib["ANNOTATION_ID"]
+            timeslots[tsref]["value"] = aa.find("ANNOTATION_VALUE").text
+            timeslots[tsref]["ts"] = tsref
 
         for (key, ts) in timeslots.items():
             if "name" not in ts:

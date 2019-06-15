@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-form label-width="200px">
+        <el-form label-width="200px" @submit.native.prevent>
             <el-form-item label="Filter files">
                 <el-input v-model="fileFilter" type="text" placeholder="Filter file list..."></el-input>
             </el-form-item>
@@ -10,6 +10,7 @@
             :height="height"
             width="800"
             :default-sort="{prop: 'file', order: 'ascending'}"
+            :highlight-current-row="true"
             stripe
             @row-click="triggerRowSelection"
             class="text-lg"
@@ -40,7 +41,7 @@
 export default {
     data() {
         return {
-            height: 500,
+            height: 300,
             dataColumnWidth: 280,
             fileFilter: undefined
         };

@@ -1,6 +1,6 @@
 <template>
-    <div class="container mx-auto font-mono p-4">
-        <el-card>
+    <div class="mx-auto font-mono p-5">
+        <el-card class="px-6">
             <div slot="header">
                 File Statistics
                 <p class="text-gray-600">
@@ -10,11 +10,23 @@
             </div>
             <render-data-table-component v-on:row-selected="loadFileData"/>
         </el-card>
-        <div class="flex">
-            <div class="w-1/2">
-                <el-card class="mt-4">
-                    <div slot="header">Selected File Issues</div>
+        <div class="flex flex-wrap">
+            <div class="w-full xl:w-2/5">
+                <el-card class="mt-4 xl:mr-2 px-6">
+                    <div slot="header">{{selection.file}}</div>
                     <render-issues-component :issues="dataFile.issues" v-if="dataFile"/>
+                </el-card>
+            </div>
+            <div class="w-full xl:w-3/5">
+                <el-card class="mt-4 xl:ml-2 px-6">
+                    <div slot="header">
+                        {{selection.file}}
+                        <p class="text-gray-600">
+                            Click on the first ring to zoom in to a timeslot or on the center to zoom back out. Hover over
+                            any element to see the trail.
+                        </p>
+                    </div>
+                    <render-sunburst-component :data="dataFile.data" v-if="dataFile"/>
                 </el-card>
             </div>
         </div>
@@ -25,15 +37,18 @@
 import { loadIndex, loadFileData } from "../data-loader.service.js";
 import RenderDataTableComponent from "./RenderDataTable.component.vue";
 import RenderIssuesComponent from "./RenderIssues.component.vue";
+import RenderSunburstComponent from "./RenderSunburst.component.vue";
 
 export default {
     components: {
         RenderDataTableComponent,
-        RenderIssuesComponent
+        RenderIssuesComponent,
+        RenderSunburstComponent
     },
     data() {
         return {
-            dataFile: undefined
+            dataFile: undefined,
+            selection: {}
         };
     },
     computed: {
@@ -44,11 +59,20 @@ export default {
     mounted() {
         (async () => {
             await loadIndex({ store: this.$store });
+            // this.loadFileData(
+            //     this.$store.state.index.filter(
+            //         f => f.file === "NT5-TokelauOf-vid.eaf"
+            //     )[0]
+            // );
+            // this.loadFileData(this.$store.state.index[0]);
         })();
     },
     methods: {
         async loadFileData(file) {
-            this.dataFile = await loadFileData({ dataFile: file.dataFile });
+            this.selection = file;
+            this.dataFile = await loadFileData({
+                dataFile: file.dataFile
+            });
         }
     }
 };
