@@ -10,7 +10,7 @@
             </div>
             <render-data-table-component v-on:row-selected="loadFileData"/>
         </el-card>
-        <div class="flex flex-wrap">
+        <div class="flex flex-wrap" v-show="selection.file">
             <div class="w-full xl:w-2/5">
                 <el-card class="mt-4 xl:mr-2 px-6">
                     <div slot="header">{{selection.file}}</div>
