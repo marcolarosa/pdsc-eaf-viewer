@@ -17,7 +17,7 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, "dist"),
         filename: "[name].[hash].bundle.js",
-        publicPath: "/elan-lint"
+        publicPath: "/eaf-viewer/"
     },
     optimization: {
         splitChunks: {
@@ -46,10 +46,7 @@ module.exports = {
             title: "Inteja",
             template: "./src/index.html"
         }),
-        new VueLoaderPlugin(),
-        new webpack.ProvidePlugin({
-            introJs: ["intro.js", "introJs"]
-        })
+        new VueLoaderPlugin()
     ],
     module: {
         rules: [

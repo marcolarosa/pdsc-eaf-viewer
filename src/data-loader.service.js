@@ -32,6 +32,6 @@ export function mapRepositoryRoot(path) {
     const root =
         process.env.NODE_ENV === "development"
             ? "/repository"
-            : "/elan-lint/repository";
+            : "/eaf-viewer/repository";
     return path.replace("/repository", root);
 }

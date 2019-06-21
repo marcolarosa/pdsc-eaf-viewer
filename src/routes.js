@@ -9,7 +9,7 @@ import BadRequestComponent from "components/BadRequest.component.vue";
 
 export const router = new VueRouter({
     mode: "history",
-    base: process.env.NODE_ENV === "development" ? "/" : "/elan-lint",
+    base: process.env.NODE_ENV === "development" ? "/" : "/eaf-viewer",
     routes: [
         { path: "*", name: "404", component: BadRequestComponent },
         {
