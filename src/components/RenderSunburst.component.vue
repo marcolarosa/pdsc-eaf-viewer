@@ -73,7 +73,7 @@ export default {
             // const radius = Math.min(this.width, this.height) / 2;
             const radius = Math.min(this.width, this.height) / 2;
             const format = d3format(",d");
-            const color = scaleOrdinal(quantize(interpolateRainbow, 6));
+            const color = scaleOrdinal(quantize(interpolateRainbow, 10));
 
             const arc = d3arc()
                 .startAngle(d => d.x0)
@@ -97,8 +97,11 @@ export default {
                 .data(root.descendants())
                 .join("path")
                 .attr("fill", d => {
+                    const originalData = { ...d.data };
                     while (d.depth > 1) d = d.parent;
-                    return color(d.data.name);
+                    return originalData.value !== null
+                        ? color(d.data.name)
+                        : "#ccc";
                 })
                 .attr("d", d => arc(d.current));
 
