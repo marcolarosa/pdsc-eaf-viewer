@@ -13,7 +13,7 @@ module.exports = {
     target: "web",
     mode: "production",
     devtool: "none",
-    entry: ["./src/vendor.js", "./src/index.js"],
+    entry: ["./src/index.js"],
     output: {
         path: path.resolve(__dirname, "dist"),
         filename: "[name].[hash].bundle.js",

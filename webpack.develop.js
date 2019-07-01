@@ -11,7 +11,7 @@ module.exports = {
     target: "web",
     mode: "development",
     devtool: "eval-source-map",
-    entry: ["./src/vendor.js", "./src/index.js"],
+    entry: ["./src/index.js"],
     output: {
         path: path.resolve(__dirname, "dist"),
         filename: "[name].[hash].bundle.js"

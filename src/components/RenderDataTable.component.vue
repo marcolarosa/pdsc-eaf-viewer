@@ -17,6 +17,7 @@
             width="800"
             :default-sort="{prop: 'duration', order: 'ascending'}"
             :highlight-current-row="true"
+            :row-style="{'cursor': 'pointer'}"
             stripe
             @row-click="triggerRowSelection"
             @sort-change="updateSortParams"
@@ -88,7 +89,7 @@ export default {
                 prop,
                 order: order === "descending" ? "desc" : "asc"
             };
-        }
+        },
     }
 };
 </script>

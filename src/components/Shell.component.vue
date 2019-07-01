@@ -8,28 +8,61 @@
                     of the structure.
                 </p>
             </div>
-            <render-data-table-component v-on:row-selected="loadFileData"/>
+            <render-data-table-component v-on:row-selected="loadFile" />
         </el-card>
-        <div class="flex flex-wrap" v-show="selection.file">
-            <div class="w-full xl:w-2/5">
-                <el-card class="mt-4 xl:mr-2 px-6">
-                    <div slot="header">{{selection.file}}</div>
-                    <render-issues-component :issues="dataFile.issues" v-if="dataFile"/>
-                </el-card>
-            </div>
-            <div class="w-full xl:w-3/5">
-                <el-card class="mt-4 xl:ml-2 px-6">
-                    <div slot="header">
-                        {{selection.file}}
-                        <p class="text-gray-600">
-                            Click on the first ring to zoom in to a timeslot or on the center to zoom back out. Hover over
-                            any element to see the trail.
-                        </p>
+        <el-card class="mt-4" id="top">
+            <span v-show="!loading && selection.file">
+                <div slot="header">{{selection.file}}</div>
+                <div class="w-full">
+                    <el-button type="text" @click="showErrors = !showErrors">
+                        <span v-if="showErrors">
+                            <font-awesome-icon :icon="['fal', 'minus-square']"></font-awesome-icon>&nbsp;hide errors
+                        </span>
+                        <span v-if="!showErrors">
+                            <font-awesome-icon :icon="['fal', 'plus-square']"></font-awesome-icon>&nbsp;show errors
+                        </span>
+                    </el-button>
+                    <render-issues-component
+                        :issues="dataFile.issues"
+                        v-if="showErrors && dataFile.issues.length"
+                    />
+                </div>
+                <div class="flex flex-wrap">
+                    <div class="w-full xl:w-1/2">
+                        <el-card class="mt-4 xl:mr-2 px-6">
+                            <div slot="header" class="style-header">
+                                A visualisation of the timeslots
+                                <p class="text-gray-600">
+                                    This visualisation depicts the timeslots and annotations found in the file. The first ring
+                                    (from the centre) has a block for each timeslot. Selecting one of the timeslots will zoom the visualisation
+                                    to show only that timeslot and its associated annotations. To zoom back out, select the central node.
+                                </p>
+                            </div>
+                            <render-timeslot-sunburst-component
+                                :data="dataFile.timeslots"
+                                v-if="dataFile.timeslots"
+                            />
+                        </el-card>
                     </div>
-                    <render-sunburst-component :data="dataFile.data" v-if="dataFile"/>
-                </el-card>
-            </div>
-        </div>
+                    <div class="w-full xl:w-1/2">
+                        <el-card class="mt-4 xl:ml-2 px-6">
+                            <div slot="header" class="style-header">
+                                A visualisation of the tiers
+                                <p class="text-gray-600">
+                                    This visualisation depicts the tiers and annotations found in the file. The first ring
+                                    (from the centre) has a block for each tier. Selecting one of the tiers will zoom the visualisation
+                                    to show only that tier and its associated annotations. To zoom back out, select the central node.
+                                </p>
+                            </div>
+                            <render-tier-sunburst-component
+                                :data="dataFile.tiers"
+                                v-if="dataFile.tiers"
+                            />
+                        </el-card>
+                    </div>
+                </div>
+            </span>
+        </el-card>
     </div>
 </template>
 
@@ -37,18 +70,27 @@
 import { loadIndex, loadFileData } from "../data-loader.service.js";
 import RenderDataTableComponent from "./RenderDataTable.component.vue";
 import RenderIssuesComponent from "./RenderIssues.component.vue";
-import RenderSunburstComponent from "./RenderSunburst.component.vue";
+import RenderTimeslotSunburstComponent from "./RenderTimeslotSunburst.component.vue";
+import RenderTierSunburstComponent from "./RenderTierSunburst.component.vue";
+import VueScrollTo from "vue-scrollto";
 
 export default {
     components: {
         RenderDataTableComponent,
         RenderIssuesComponent,
-        RenderSunburstComponent
+        RenderTimeslotSunburstComponent,
+        RenderTierSunburstComponent
     },
     data() {
         return {
-            dataFile: undefined,
-            selection: {}
+            dataFile: {
+                issues: [],
+                timeslots: {},
+                tiers: {}
+            },
+            selection: {},
+            showErrors: false,
+            loading: false
         };
     },
     computed: {
@@ -59,24 +101,31 @@ export default {
     mounted() {
         (async () => {
             await loadIndex({ store: this.$store });
-            // this.loadFileData(
-            //     this.$store.state.index.filter(
-            //         f => f.file === "NT5-TokelauOf-vid.eaf"
-            //     )[0]
-            // );
-            // this.loadFileData(this.$store.state.index[0]);
         })();
     },
     methods: {
-        async loadFileData(file) {
-            this.selection = file;
-            this.dataFile = await loadFileData({
-                dataFile: file.dataFile
-            });
+        async loadFile(file) {
+            this.loading = true;
+            this.dataFile = {
+                issues: [],
+                tiers: {},
+                timeslots: {}
+            };
+            setTimeout(async () => {
+                this.selection = file;
+                this.dataFile = await loadFileData({
+                    dataFile: file.dataFile
+                });
+                this.loading = false;
+                VueScrollTo.scrollTo("#top", 2000);
+            }, 1000);
         }
     }
 };
 </script>
 
 <style scoped lang="scss">
+.style-header {
+    height: 120px;
+}
 </style>

@@ -1,12 +1,15 @@
 <template>
     <div class="flex">
         <div class="w-3/5">
-            <svg ref="sunburstChart"></svg>
+            <svg ref="timeslotSunburstChart" />
         </div>
         <div class="w-2/5">
             <div v-for="(element, idx) of trail" :key="idx">
-                <div v-if="element.ts">TIMESLOT: {{element.ts}}</div>
-                ANNOTATION ID: {{element.name}} VALUE: {{element.value}}
+                <span v-if="element.ts">
+                    <div>TIMESLOT: {{element.ts.start}} - {{element.ts.end}}</div>
+                    <div>Time: {{element.time.start}} - {{element.time.end}}</div>
+                </span>
+                <div>ANNOTATION ID: {{element.name}} VALUE: {{element.value}}</div>
             </div>
         </div>
     </div>
@@ -37,8 +40,8 @@ export default {
         return {
             watchers: {},
             debouncedRender: debounce(this.renderVisualisation, 1000),
-            width: 500,
-            height: 500,
+            width: 400,
+            height: 400,
             trail: []
         };
     },
@@ -52,7 +55,9 @@ export default {
     },
     methods: {
         setupVisualisation() {
-            this.sunburstVisualisation = select(this.$refs["sunburstChart"])
+            this.timeslotSunburstVisualisation = select(
+                this.$refs["timeslotSunburstChart"]
+            )
                 .style("width", `${this.width}px`)
                 .style("height", `${this.height}px`)
                 .attr("font-size", 14)
@@ -67,8 +72,10 @@ export default {
                 );
         },
         renderVisualisation() {
-            var sunburstVisualisation = this.$refs["sunburstChart"];
-            this.sunburstVisualisation.selectAll("path").remove();
+            var timeslotSunburstVisualisation = this.$refs[
+                "timeslotSunburstChart"
+            ];
+            this.timeslotSunburstVisualisation.selectAll("path").remove();
 
             // const radius = Math.min(this.width, this.height) / 2;
             const radius = Math.min(this.width, this.height) / 2;
@@ -91,7 +98,7 @@ export default {
             const root = partition(this.data);
             root.each(d => (d.current = d));
 
-            this.sunburstVisualisation
+            this.timeslotSunburstVisualisation
                 .append("g")
                 .selectAll("path")
                 .data(root.descendants())
@@ -105,14 +112,17 @@ export default {
                 })
                 .attr("d", d => arc(d.current));
 
-            const path = selectAll("path");
-            path.filter(d => d.depth < 2)
+            this.timeslotSunburstVisualisation
+                .selectAll("path")
+                .filter(d => d.depth < 2)
                 .style("cursor", "pointer")
                 .on("click", clicked);
 
-            path.style("cursor", "pointer").on("mouseover", this.mouseover);
+            this.timeslotSunburstVisualisation
+                .selectAll("path")
+                .on("mouseover", this.mouseover);
 
-            const parent = this.sunburstVisualisation
+            const parent = this.timeslotSunburstVisualisation
                 .append("circle")
                 .datum(root)
                 .attr("fill", "none")
@@ -144,7 +154,7 @@ export default {
                         })
                 );
 
-                const t = select(sunburstVisualisation)
+                const t = select(timeslotSunburstVisualisation)
                     .select("g")
                     .transition()
                     .duration(750);
@@ -152,7 +162,9 @@ export default {
                 // Transition the data on all arcs, even the ones that aren’t visible,
                 // so that if this transition is interrupted, entering arcs will start
                 // the next transition from the desired position.
-                path.transition(t)
+                select(timeslotSunburstVisualisation)
+                    .selectAll("path")
+                    .transition(t)
                     .tween("data", d => {
                         const i = interpolate(d.current, d.target);
                         return t => (d.current = i(t));
@@ -167,10 +179,12 @@ export default {
             this.trail = nodes.map(n => n.data);
 
             // Fade all the segments.
-            selectAll("path").style("opacity", 0.3);
+            this.timeslotSunburstVisualisation
+                .selectAll("path")
+                .style("opacity", 0.3);
 
             // Then highlight only those that are an ancestor of the current segment.
-            this.sunburstVisualisation
+            this.timeslotSunburstVisualisation
                 .selectAll("path")
                 .filter(function(n) {
                     return node.ancestors().indexOf(n) >= 0;
@@ -187,11 +201,4 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.style-trail {
-    position: relative;
-    z-index: 10;
-}
-.style-sunburst {
-    position: relative;
-}
 </style>
