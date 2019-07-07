@@ -1,15 +1,26 @@
 <template>
     <div class="flex">
-        <div class="w-3/5">
+        <div class="w-full">
             <svg ref="tierSunburstChart" />
         </div>
-        <div class="w-2/5">
+        <div class="w-full">
+            <!-- <div v-if="trail.length">Tier: {{trail[0].name}}</div>
             <div v-for="(element, idx) of trail" :key="idx">
                 <span v-if="element.children.length">
-                    Tier:{{element.name}}
-                    <br />
-                    Annotations: {{element.children.length}}
+                    name: {{element.name}}
+                    # Annotations: {{element.children.length}}
                 </span>
+            </div>-->
+            <span v-if="trail.length">
+                <div>Tier: {{trail[0].name}}</div>
+                <div># Annotations: {{trail[0].children.length}}</div>
+            </span>
+            <div v-for="(element, idx) of trail.slice(1)" :key="idx">
+                <span v-if="element.ts">
+                    <!-- <div>TIMESLOT: {{element.ts.start}} - {{element.ts.end}}</div> -->
+                    <!-- <div>Time: {{element.time.start}} - {{element.time.end}}</div> -->
+                </span>
+                <div>ANNOTATION ID: {{element.name}} VALUE: {{element.value}}</div>
             </div>
         </div>
     </div>
@@ -40,8 +51,8 @@ export default {
         return {
             watchers: {},
             debouncedRender: debounce(this.renderVisualisation, 1000),
-            width: 400,
-            height: 400,
+            width: 800,
+            height: 800,
             trail: []
         };
     },
@@ -104,15 +115,15 @@ export default {
                 .attr("fill", d => {
                     const originalData = { ...d.data };
                     while (d.depth > 1) d = d.parent;
-                    return originalData.value !== null
+                    return originalData.value !== undefined
                         ? color(d.data.name)
-                        : "#ccc";
+                        : "#000";
                 })
                 .attr("d", d => arc(d.current));
 
             this.tierSunburstVisualisation
                 .selectAll("path")
-                .filter(d => d.depth < 2)
+                .filter(d => d.depth < 3)
                 .style("cursor", "pointer")
                 .on("click", clicked);
 
@@ -173,7 +184,7 @@ export default {
         },
 
         mouseover(node) {
-            if (!node.data.children.length) return;
+            // if (!node.data.children.length) return;
             let nodes = node.ancestors().reverse();
             nodes.shift();
             this.trail = nodes.map(n => n.data);

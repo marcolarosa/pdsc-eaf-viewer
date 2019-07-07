@@ -1,9 +1,9 @@
 <template>
     <div class="flex">
-        <div class="w-3/5">
+        <div class="w-full">
             <svg ref="timeslotSunburstChart" />
         </div>
-        <div class="w-2/5">
+        <div class="w-full">
             <div v-for="(element, idx) of trail" :key="idx">
                 <span v-if="element.ts">
                     <div>TIMESLOT: {{element.ts.start}} - {{element.ts.end}}</div>
@@ -40,8 +40,8 @@ export default {
         return {
             watchers: {},
             debouncedRender: debounce(this.renderVisualisation, 1000),
-            width: 400,
-            height: 400,
+            width: 800,
+            height: 800,
             trail: []
         };
     },
@@ -106,9 +106,9 @@ export default {
                 .attr("fill", d => {
                     const originalData = { ...d.data };
                     while (d.depth > 1) d = d.parent;
-                    return originalData.value !== null
+                    return originalData.value !== undefined
                         ? color(d.data.name)
-                        : "#ccc";
+                        : "#000";
                 })
                 .attr("d", d => arc(d.current));
 

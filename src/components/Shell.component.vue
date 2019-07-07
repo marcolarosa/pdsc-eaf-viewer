@@ -1,6 +1,7 @@
 <template>
-    <div class="mx-auto font-mono p-5">
-        <el-card class="px-6">
+    <div class="mx-auto font-mono p-2">
+        <folder-selection-component />
+        <el-card class="px-6 mt-4" v-if="Object.keys(index).length">
             <div slot="header">
                 File Statistics
                 <p class="text-gray-600">
@@ -10,10 +11,10 @@
             </div>
             <render-data-table-component v-on:row-selected="loadFile" />
         </el-card>
-        <el-card class="mt-4" id="top">
-            <span v-show="!loading && selection.file">
-                <div slot="header">{{selection.file}}</div>
-                <div class="w-full">
+        <span id="top"></span>
+        <el-card class="mt-4" v-if="!loading && selection.file && index.length">
+            <div slot="header">{{selection.file}}</div>
+            <!-- <div class="w-full">
                     <el-button type="text" @click="showErrors = !showErrors">
                         <span v-if="showErrors">
                             <font-awesome-icon :icon="['fal', 'minus-square']"></font-awesome-icon>&nbsp;hide errors
@@ -26,56 +27,57 @@
                         :issues="dataFile.issues"
                         v-if="showErrors && dataFile.issues.length"
                     />
+            </div>-->
+            <div class="flex flex-wrap">
+                <div class="w-full xxl:w-1/2">
+                    <el-card class="mt-4 xl:mr-2 px-6">
+                        <div slot="header" class="style-header">
+                            A visualisation of the timeslots
+                            <p class="text-gray-600">
+                                This visualisation depicts the timeslots and annotations found in the file. The first ring
+                                (from the centre) has a block for each timeslot. Selecting one of the timeslots will zoom the visualisation
+                                to show only that timeslot and its associated annotations. To zoom back out, select the central node.
+                            </p>
+                        </div>
+                        <render-timeslot-sunburst-component
+                            :data="selection.timeslots"
+                            v-if="selection.timeslots"
+                        />
+                    </el-card>
                 </div>
-                <div class="flex flex-wrap">
-                    <div class="w-full xl:w-1/2">
-                        <el-card class="mt-4 xl:mr-2 px-6">
-                            <div slot="header" class="style-header">
-                                A visualisation of the timeslots
-                                <p class="text-gray-600">
-                                    This visualisation depicts the timeslots and annotations found in the file. The first ring
-                                    (from the centre) has a block for each timeslot. Selecting one of the timeslots will zoom the visualisation
-                                    to show only that timeslot and its associated annotations. To zoom back out, select the central node.
-                                </p>
-                            </div>
-                            <render-timeslot-sunburst-component
-                                :data="dataFile.timeslots"
-                                v-if="dataFile.timeslots"
-                            />
-                        </el-card>
-                    </div>
-                    <div class="w-full xl:w-1/2">
-                        <el-card class="mt-4 xl:ml-2 px-6">
-                            <div slot="header" class="style-header">
-                                A visualisation of the tiers
-                                <p class="text-gray-600">
-                                    This visualisation depicts the tiers and annotations found in the file. The first ring
-                                    (from the centre) has a block for each tier. Selecting one of the tiers will zoom the visualisation
-                                    to show only that tier and its associated annotations. To zoom back out, select the central node.
-                                </p>
-                            </div>
-                            <render-tier-sunburst-component
-                                :data="dataFile.tiers"
-                                v-if="dataFile.tiers"
-                            />
-                        </el-card>
-                    </div>
+                <div class="w-full xxl:w-1/2">
+                    <el-card class="mt-4 xl:ml-2 px-6">
+                        <div slot="header" class="style-header">
+                            A visualisation of the tiers
+                            <p class="text-gray-600">
+                                This visualisation depicts the tiers and annotations found in the file. The first ring
+                                (from the centre) has a block for each tier. Selecting one of the tiers will zoom the visualisation
+                                to show only that tier and its associated annotations. To zoom back out, select the central node.
+                            </p>
+                        </div>
+                        <render-tier-sunburst-component
+                            :data="selection.tiers"
+                            v-if="selection.tiers"
+                        />
+                    </el-card>
                 </div>
-            </span>
+            </div>
         </el-card>
     </div>
 </template>
 
 <script>
-import { loadIndex, loadFileData } from "../data-loader.service.js";
+import { loadFileData } from "../renderer/data-loader.service.js";
 import RenderDataTableComponent from "./RenderDataTable.component.vue";
 import RenderIssuesComponent from "./RenderIssues.component.vue";
 import RenderTimeslotSunburstComponent from "./RenderTimeslotSunburst.component.vue";
 import RenderTierSunburstComponent from "./RenderTierSunburst.component.vue";
+import FolderSelectionComponent from "./FolderSelection.component.vue";
 import VueScrollTo from "vue-scrollto";
 
 export default {
     components: {
+        FolderSelectionComponent,
         RenderDataTableComponent,
         RenderIssuesComponent,
         RenderTimeslotSunburstComponent,
@@ -83,11 +85,6 @@ export default {
     },
     data() {
         return {
-            dataFile: {
-                issues: [],
-                timeslots: {},
-                tiers: {}
-            },
             selection: {},
             showErrors: false,
             loading: false
@@ -98,26 +95,15 @@ export default {
             return this.$store.state.index;
         }
     },
-    mounted() {
-        (async () => {
-            await loadIndex({ store: this.$store });
-        })();
-    },
+    mounted() {},
     methods: {
-        async loadFile(file) {
+        async loadFile(item) {
             this.loading = true;
-            this.dataFile = {
-                issues: [],
-                tiers: {},
-                timeslots: {}
-            };
+            this.selection = {};
             setTimeout(async () => {
-                this.selection = file;
-                this.dataFile = await loadFileData({
-                    dataFile: file.dataFile
-                });
+                this.selection = item;
                 this.loading = false;
-                VueScrollTo.scrollTo("#top", 2000);
+                VueScrollTo.scrollTo("#top", 1000);
             }, 1000);
         }
     }
@@ -127,5 +113,10 @@ export default {
 <style scoped lang="scss">
 .style-header {
     height: 120px;
+}
+
+.style-white {
+    background-color: white;
+    height: 100px;
 }
 </style>

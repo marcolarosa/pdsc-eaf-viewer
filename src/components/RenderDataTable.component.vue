@@ -24,21 +24,37 @@
             class="text-md"
         >
             <el-table-column prop="file" label="File" width="300" fixed sortable="custom"></el-table-column>
-            <el-table-column prop="duration" label="Duration" width="120" sortable="custom"></el-table-column>
-            <el-table-column prop="timeslots" label="# Timeslots" width="150" sortable="custom"></el-table-column>
-            <el-table-column prop="totalIssues" label="Issues" width="120" sortable="custom"></el-table-column>
-            <el-table-column prop="start" label="Start Time" width="120"></el-table-column>
-            <el-table-column prop="end" label="End Time" width="120"></el-table-column>
             <el-table-column
-                prop="totalRefAnnotations"
-                label="Ref Annotations"
-                width="180"
+                prop="statistics.duration"
+                label="Duration"
+                width="120"
                 sortable="custom"
             ></el-table-column>
             <el-table-column
-                prop="totalMappedAnnotations"
-                label="Mapped Annotations"
-                width="200"
+                prop="statistics.numberOfTimeslots"
+                label="# Timeslots"
+                width="150"
+                sortable="custom"
+            ></el-table-column>
+            <el-table-column
+                prop="statistics.numberOfTiers"
+                label="# Tiers "
+                width="120"
+                sortable="custom"
+            ></el-table-column>
+            <!-- <el-table-column
+                prop="statistics.emptyTiers"
+                label="Empty Tiers"
+                width="150"
+                sortable="custom"
+            ></el-table-column>-->
+            <!-- <el-table-column prop="totalIssues" label="Issues" width="120" sortable="custom"></el-table-column> -->
+            <el-table-column prop="statistics.startTime" label="Start Time" width="120"></el-table-column>
+            <el-table-column prop="statistics.endTime" label="End Time" width="120"></el-table-column>
+            <el-table-column
+                prop="statistics.unmappedAnnotations.length"
+                label="# Unmapped Annotations"
+                width="240"
                 sortable="custom"
             ></el-table-column>
         </el-table>
@@ -56,17 +72,16 @@ export default {
             pageSize: 10,
             currentPage: 1,
             sort: {
-                prop: "duration",
+                prop: "statistics.duration",
                 order: "ascending"
             }
         };
     },
     computed: {
         index: function() {
+            let index = this.$store.state.index.filter(d => !d.errors.length);
             return orderBy(
-                this.$store.state.index.filter(f =>
-                    f.file.match(this.fileFilter)
-                ),
+                index.filter(f => f.file.match(this.fileFilter)),
                 [this.sort.prop],
                 [this.sort.order]
             ).slice(
@@ -75,9 +90,8 @@ export default {
             );
         },
         total: function() {
-            return this.$store.state.index.filter(f =>
-                f.file.match(this.fileFilter)
-            ).length;
+            let index = this.$store.state.index.filter(d => !d.errors.length);
+            return index.filter(f => f.file.match(this.fileFilter)).length;
         }
     },
     methods: {
@@ -89,7 +103,7 @@ export default {
                 prop,
                 order: order === "descending" ? "desc" : "asc"
             };
-        },
+        }
     }
 };
 </script>
