@@ -46,8 +46,8 @@ function createMainWindow() {
         });
     });
 
-    // autoUpdater.on("update-downloaded", onUpdateDownloaded);
-    // autoUpdater.checkForUpdates();
+    autoUpdater.on("update-downloaded", onUpdateDownloaded);
+    autoUpdater.checkForUpdatesAndNotify();
 
     return window;
 }
