@@ -14,7 +14,7 @@ export GH_TOKEN="${token}"
 
 
 read -p 'Should I bump the minor version number? [y/N] ' resp
-if [ "$resp" == 'y'] ; then
+if [ "$resp" == 'y' ] ; then
     npm version minor
 fi
 PACKAGE_VERSION=$(awk '/version/{gsub(/("|",)/,"",$2);print $2};' package.json)
