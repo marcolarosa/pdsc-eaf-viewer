@@ -223,6 +223,8 @@ export class DataExtractor {
             dataAnnotations,
             mappedAnnotations
         );
+        statistics.referenceAnnotations = referenceAnnotations.length;
+        statistics.alignableAnnotations = alignableAnnotations.length;
 
         function count(annotation) {
             mappedAnnotations[annotation.name] = annotation;

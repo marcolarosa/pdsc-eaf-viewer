@@ -29,33 +29,61 @@
                 label="Duration"
                 width="120"
                 sortable="custom"
+                align="center"
             ></el-table-column>
             <el-table-column
                 prop="statistics.numberOfTimeslots"
                 label="# Timeslots"
                 width="150"
                 sortable="custom"
+                align="center"
             ></el-table-column>
             <el-table-column
                 prop="statistics.numberOfTiers"
                 label="# Tiers "
                 width="120"
                 sortable="custom"
+                align="center"
             ></el-table-column>
-            <!-- <el-table-column
+            <el-table-column
                 prop="statistics.emptyTiers"
                 label="Empty Tiers"
-                width="150"
+                width="180"
                 sortable="custom"
-            ></el-table-column>-->
-            <!-- <el-table-column prop="totalIssues" label="Issues" width="120" sortable="custom"></el-table-column> -->
-            <el-table-column prop="statistics.startTime" label="Start Time" width="120"></el-table-column>
-            <el-table-column prop="statistics.endTime" label="End Time" width="120"></el-table-column>
+                align="center"
+            >
+                <template slot-scope="scope">
+                    <span v-if="scope.row.statistics.emptyTiers">yes</span>
+                    <span v-if="!scope.row.statistics.emptyTiers">no</span>
+                </template>
+            </el-table-column>
+            <el-table-column
+                prop="statistics.startTime"
+                label="Start Time"
+                width="120"
+                align="center"
+            ></el-table-column>
+            <el-table-column prop="statistics.endTime" label="End Time" width="120" align="center"></el-table-column>
+            <el-table-column
+                prop="statistics.referenceAnnotations"
+                label="# Reference Annotations"
+                width="250"
+                sortable="custom"
+                align="center"
+            ></el-table-column>
+            <el-table-column
+                prop="statistics.alignableAnnotations"
+                label="# Alignable Annotations"
+                width="250"
+                sortable="custom"
+                align="center"
+            ></el-table-column>
             <el-table-column
                 prop="statistics.unmappedAnnotations.length"
                 label="# Unmapped Annotations"
                 width="240"
                 sortable="custom"
+                align="center"
             ></el-table-column>
         </el-table>
     </div>
