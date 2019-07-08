@@ -10,13 +10,15 @@ if [ -z $GH_TOKEN ] ; then
     fi
 fi
 
-export GH_TOKEN="${token}"
-
 
 read -p 'Should I bump the minor version number? [y/N] ' resp
 if [ "$resp" == 'y' ] ; then
     npm version minor
 fi
+
+export GH_TOKEN="${token}"
+npm run build:mac
+
 PACKAGE_VERSION=$(awk '/version/{gsub(/("|",)/,"",$2);print $2};' package.json)
 git tag -a "v${PACKAGE_VERSION}" -e
   
