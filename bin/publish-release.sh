@@ -1,15 +1,11 @@
 #!/bin/bash
 
-if [ -z $GH_TOKEN ] ; then
-    echo 'A github personal access token is not set in the environment.'
-    read -p 'Please enter one so that the release can be pushed. > ' token
+read -p 'Please enter an appropriate GitHub personal access token so that the release can be pushed. > ' token
 
-    if [ -z $token ] ; then
-        echo "A token was not provided. Exiting."
-        exit -1
-    fi
+if [ -z $token ] ; then
+    echo "A token was not provided. Exiting."
+    exit -1
 fi
-
 
 read -p 'Should I bump the minor version number? [y/N] ' resp
 if [ "$resp" == 'y' ] ; then
