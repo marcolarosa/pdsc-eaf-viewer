@@ -10,7 +10,8 @@
         "dist:dir": "npm run dist --dir -c.compression=store -c.mac.identity=null",
         "server": "npm install && node_modules/gulp/bin/gulp.js develop",
         "test": "gulp test",
-        "build:mac": "electron-webpack && electron-builder --mac"
+        "build:mac": "electron-webpack && electron-builder --mac",
+        "publish": "electron-builder --publish always"
     },
     "repository": {
         "type": "git",
@@ -19,7 +20,10 @@
     "build": {
         "appId": "au.org.paradisec.eaf-viewer",
         "productName": "EAF Viewer",
-        "mac": {}
+        "mac": {},
+        "publish": [
+            "github"
+        ]
     },
     "electronWebpack": {
         "renderer": {

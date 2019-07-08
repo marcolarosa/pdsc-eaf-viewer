@@ -2,6 +2,7 @@
   - [Developing the application](#Developing-the-application)
   - [Vue application](#Vue-application)
   - [Building a release for MacOS](#Building-a-release-for-MacOS)
+  - [Publishing release to github releases](#Publishing-release-to-github-releases)
   - [Electron webpack](#Electron-webpack)
 
 # EAF Viewer
@@ -26,6 +27,18 @@ information.
 ```
 > npm run build:mac
 ```
+
+## Publishing release to github releases
+
+For this you will need a Github Personal Access Token. See github for more information. It also assumes you've already
+run the build commands (see above).
+
+```
+> ./bin/publish-release.sh
+```
+
+After the release has been built navigate to [https://github.com/marcolarosa/pdsc-eaf-viewer/releases](https://github.com/marcolarosa/pdsc-eaf-viewer/releases)
+and check the artifacts are ok, then `Edit` and `Publish release`.
 
 ## Electron webpack
 
