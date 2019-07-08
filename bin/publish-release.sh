@@ -16,10 +16,9 @@ export GH_TOKEN="${token}"
 read -p 'Should I bump the minor version number? [y/N] ' resp
 if [ "$resp" == 'y'] ; then
     npm version minor
-    git commit -m "minor version bump" -a
 fi
 PACKAGE_VERSION=$(awk '/version/{gsub(/("|",)/,"",$2);print $2};' package.json)
-git tab -a "v${PACKAGE_VERSION}"
+git tag -a "v${PACKAGE_VERSION}" -e
   
 npm run publish
 
