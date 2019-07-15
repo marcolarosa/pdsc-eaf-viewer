@@ -30,6 +30,15 @@
                 width="120"
                 sortable="custom"
                 align="center"
+            >
+                <template slot-scope="scope">{{humanizeDuration(scope.row.statistics.duration)}}</template>
+            </el-table-column>
+            <el-table-column
+                prop="statistics.percentageFilled"
+                label="% Filled"
+                width="120"
+                sortable="custom"
+                align="center"
             ></el-table-column>
             <el-table-column
                 prop="statistics.numberOfTimeslots"
@@ -90,7 +99,7 @@
 </template>
 
 <script>
-import { orderBy } from "lodash";
+import { orderBy, round } from "lodash";
 
 export default {
     data() {
@@ -100,7 +109,7 @@ export default {
             pageSize: 10,
             currentPage: 1,
             sort: {
-                prop: "statistics.duration",
+                prop: "statistics.percentageFilled",
                 order: "ascending"
             }
         };
@@ -131,6 +140,9 @@ export default {
                 prop,
                 order: order === "descending" ? "desc" : "asc"
             };
+        },
+        humanizeDuration(duration) {
+            return `${round(duration / 60, 0)} mins`;
         }
     }
 };

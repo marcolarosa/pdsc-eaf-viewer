@@ -5,7 +5,7 @@ import path from "path";
 import { promisify } from "util";
 const readfile = promisify(fs.readFile);
 import convert from "xml-js";
-import { flattenDeep, orderBy, groupBy, difference } from "lodash";
+import { flattenDeep, orderBy, groupBy, difference, round } from "lodash";
 
 export class DataExtractor {
     constructor({ folder, file }) {
@@ -204,6 +204,10 @@ export class DataExtractor {
         statistics.startTime = ts[0].value;
         statistics.endTime = ts.slice(-1)[0].value;
         statistics.numberOfTiers = tiers.length;
+        statistics.percentageFilled = round(
+            (statistics.duration / statistics.endTime) * 100,
+            1
+        );
         statistics.emptyTiers = false;
         for (let tier of tiers) {
             if (!tier.children.length) statistics.emptyTiers = true;
