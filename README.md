@@ -1,9 +1,13 @@
-- [EAF Viewer](#EAF-Viewer)
-  - [Developing the application](#Developing-the-application)
-  - [Vue application](#Vue-application)
-  - [Building a release for MacOS](#Building-a-release-for-MacOS)
-  - [Publishing release to github releases](#Publishing-release-to-github-releases)
-  - [Electron webpack](#Electron-webpack)
+> # Development of this application has moved to https://github.com/CoEDL/eaf-viewer
+>
+> ## Issues raised here will be ignored.
+
+- [EAF Viewer](#eaf-viewer)
+  - [Developing the application](#developing-the-application)
+  - [Vue application](#vue-application)
+  - [Building a release for MacOS](#building-a-release-for-macos)
+  - [Publishing release to github releases](#publishing-release-to-github-releases)
+  - [Electron webpack](#electron-webpack)
 
 # EAF Viewer
 
