@@ -68,7 +68,7 @@
         "clean-webpack-plugin": "^0.1.19",
         "connect-history-api-fallback": "^1.6.0",
         "css-loader": "^0.28.11",
-        "electron": "^5.0.6",
+        "electron": "^9.4.0",
         "electron-builder": "^20.44.4",
         "electron-webpack": "^2.7.2",
         "electron-webpack-vue": "^2.3.0",
